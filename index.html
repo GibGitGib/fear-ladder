@@ -1,0 +1,608 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fear Ladder</title>
+  <style>
+:root{--bg:#f6f7f9;--panel:#fff;--text:#20242a;--muted:#646b75;--line:#d8dde5;--primary:#2457c5;--primary-dark:#1b449e;--green:#d9f2df;--green-text:#17622b;--yellow:#fff3c4;--yellow-text:#755700;--orange:#ffe0c7;--orange-text:#8a3b00;--red:#ffd5d7;--red-text:#8e1f28;--active:#eaf0ff;--locked:#eef0f3;--done:#e7f7ec;--shadow:0 8px 24px rgba(20,28,38,0.08);}*{box-sizing:border-box;}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:var(--bg);line-height:1.45;}button,input,select{font:inherit;}button{border:0;border-radius:6px;padding:0.7rem 1rem;color:#fff;background:var(--primary);cursor:pointer;}button:hover{background:var(--primary-dark);}button:disabled{cursor:not-allowed;opacity:0.55;}.secondary{color:var(--text);border:1px solid var(--line);background:#fff;}.secondary:hover{background:#f0f2f5;}.danger{background:#b92835;}.danger:hover{background:#941d28;}.app{max-width:1040px;margin:0 auto;padding:1rem;}header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem 0 1.25rem;}h1,h2,h3{margin:0;line-height:1.2;}h1{font-size:1.8rem;}h2{margin-bottom:0.75rem;font-size:1.25rem;}h3{font-size:1rem;}p{margin:0.35rem 0 0;color:var(--muted);}.header-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:0.5rem;}.streak{min-width:150px;padding:0.65rem 0.8rem;border:1px solid var(--line);border-radius:6px;background:var(--panel);text-align:center;}.grid{display:grid;grid-template-columns:1fr;gap:1rem;}.panel{padding:1rem;border:1px solid var(--line);border-radius:8px;background:var(--panel);box-shadow:var(--shadow);}.selector-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,260px);gap:0.75rem;align-items:end;}label{display:block;margin-bottom:0.35rem;color:var(--muted);font-size:0.92rem;font-weight:700;}select,input[type="text"]{width:100%;min-height:42px;padding:0.55rem 0.65rem;border:1px solid var(--line);border-radius:6px;color:var(--text);background:#fff;}.custom-phobia{display:none;margin-top:0.75rem;}.custom-phobia.visible{display:block;}.progress-shell{height:12px;margin-top:0.8rem;overflow:hidden;border-radius:999px;background:#e3e7ed;}.progress-fill{width:0%;height:100%;background:var(--primary);}.rating-list,.ladder{display:grid;gap:0.75rem;margin-top:1rem;}.rating-item{padding:0.9rem;border:1px solid var(--line);border-radius:8px;background:#fff;}.rating-head{display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.65rem;}.rating-value{min-width:72px;padding:0.25rem 0.45rem;border-radius:999px;color:#fff;background:var(--primary);font-weight:700;text-align:center;}.range-anchors{display:grid;grid-template-columns:1fr 1fr 1fr;margin-top:0.2rem;color:var(--muted);font-size:0.9rem;}.range-anchors span:nth-child(2){text-align:center;}.range-anchors span:nth-child(3){text-align:right;}input[type="range"]{width:100%;}.rung{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:0.75rem;align-items:center;padding:0.9rem;border:1px solid var(--line);border-left-width:8px;border-radius:8px;background:#fff;}.rung:not(.locked){cursor:pointer;}.rung.locked{color:#7c838e;background:var(--locked);cursor:not-allowed;}.rung.done{background:var(--done);}.rung.active{outline:3px solid rgba(36,87,197,0.2);background:var(--active);}.low{border-left-color:#38a256;}.medium{border-left-color:#d7a91a;}.high{border-left-color:#ed7f2c;}.extreme{border-left-color:#d9414b;}.rung-number{display:grid;width:42px;height:42px;place-items:center;border-radius:999px;color:#fff;background:var(--primary);font-weight:700;}.rung.locked .rung-number{background:#98a0aa;}.rung-meta{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.45rem;color:var(--muted);font-size:0.9rem;}.badge{display:inline-flex;align-items:center;min-height:24px;padding:0.1rem 0.5rem;border-radius:999px;font-weight:700;}.badge.low{color:var(--green-text);background:var(--green);}.badge.medium{color:var(--yellow-text);background:var(--yellow);}.badge.high{color:var(--orange-text);background:var(--orange);}.badge.extreme{color:var(--red-text);background:var(--red);}.checkbox{width:26px;height:26px;accent-color:var(--primary);pointer-events:none;}.active-box{display:none;grid-column:2 / 4;padding:0.8rem;border:1px solid #cbd7ff;border-radius:8px;background:#fff;}.rung.active .active-box{display:block;}.timer-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;}.timer{font-size:1.5rem;font-weight:700;}.timer-actions{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem;}.empty-note{padding:0.9rem;border:1px dashed var(--line);border-radius:8px;color:var(--muted);background:#fff;}dialog{width:min(92vw,520px);border:0;border-radius:8px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.25);}dialog::backdrop{background:rgba(0,0,0,0.38);}.modal-body{padding:1.25rem;background:#fff;}.modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem;}.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.75rem;margin:1rem 0;}.stat{padding:0.8rem;border:1px solid var(--line);border-radius:8px;background:#f8f9fb;}.stat strong{display:block;margin-bottom:0.25rem;font-size:1.25rem;}.dots{display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.55rem;}.dot{width:18px;height:18px;border:1px solid var(--line);border-radius:999px;background:#fff;}.dot.filled{border-color:var(--primary);background:var(--primary);}.settings{display:flex;justify-content:flex-end;margin-top:1rem;}@media (min-width:860px){.grid{grid-template-columns:minmax(0,0.95fr) minmax(0,1.05fr);align-items:start;}.full{grid-column:1 / -1;}}@media (max-width:680px){header,.selector-row,.rating-head,.timer-row{display:block;}.header-actions{justify-content:flex-start;margin-top:0.75rem;}.selector-row button,.timer-actions button,.header-actions button{width:100%;}.selector-row>* + *{margin-top:0.75rem;}.rung{grid-template-columns:44px minmax(0,1fr) 30px;gap:0.55rem;}.rung-number{width:36px;height:36px;}.active-box{grid-column:1 / 4;}.stats{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Fear Ladder</h1>
+        <p>Build a rated exposure hierarchy and climb it one rung at a time.</p>
+      </div>
+      <div class="header-actions">
+        <div class="streak" id="streakText">Start today to keep your streak!</div>
+        <button type="button" id="progressButton">My Progress</button>
+      </div>
+    </header>
+    <section class="grid" aria-label="Fear ladder engine">
+      <section class="panel">
+        <h2>1. Choose a Phobia</h2>
+        <div class="selector-row">
+          <div>
+            <label for="phobiaSelect">Phobia</label>
+            <select id="phobiaSelect"></select>
+          </div>
+          <button type="button" id="savePhobiaButton">Save Selection</button>
+        </div>
+        <div class="custom-phobia" id="customPhobiaWrap">
+          <label for="customPhobiaInput">Custom phobia</label>
+          <input id="customPhobiaInput" type="text" maxlength="80" placeholder="Type your phobia">
+        </div>
+        <p id="selectedPhobiaText"></p>
+      </section>
+      <section class="panel">
+        <h2>2. Rate Situations</h2>
+        <p id="ratingProgressText">0/12 completed</p>
+        <div class="progress-shell" aria-hidden="true"><div class="progress-fill" id="ratingProgressFill"></div></div>
+        <div class="rating-list" id="ratingList"></div>
+      </section>
+      <section class="panel full">
+        <h2>3. Climb Your Ladder</h2>
+        <p id="ladderStatus">Rate all 12 situations to build your ladder.</p>
+        <div class="ladder" id="ladderList"></div>
+      </section>
+    </section>
+    <section class="settings">
+      <button type="button" class="danger" id="resetButton">Reset</button>
+    </section>
+  </main>
+  <dialog id="progressDialog">
+    <div class="modal-body">
+      <div class="modal-head">
+        <div>
+          <h2>My Progress</h2>
+          <p id="progressSummary">0 of 12 rungs completed</p>
+        </div>
+        <button type="button" class="secondary" id="closeProgressButton">Close</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong id="statCompleted">0/12</strong><span>Total rungs completed</span></div>
+        <div class="stat"><strong id="statStreak">0</strong><span>Streak days</span></div>
+        <div class="stat"><strong id="statStarted">Not started</strong><span>Date started</span></div>
+        <div class="stat"><strong id="statLastSession">No sessions</strong><span>Last session date</span></div>
+      </div>
+      <h3>Rung Progress</h3>
+      <div class="dots" id="progressDots" aria-label="12-dot progress bar"></div>
+    </div>
+  </dialog>
+  <script>
+    (function () {
+      "use strict";
+      var STATE_KEY = "fearladder_state";
+      var STREAK_KEY = "fearladder_streak";
+      var TOTAL_RUNGS = 12;
+      var TIMER_SECONDS = 60;
+      var phobiaPresets = [
+        "Acrophobia", "Aerophobia", "Claustrophobia", "Agoraphobia", "Arachnophobia",
+        "Ophidiophobia", "Cynophobia", "Trypanophobia", "Astraphobia", "Mysophobia",
+        "Glossophobia", "Social Phobia", "Thanatophobia", "Nosophobia", "Emetophobia",
+        "Hemophobia", "Dentophobia", "Vehophobia", "Nyctophobia", "Entomophobia",
+        "Atychiphobia", "Aquaphobia", "Brontophobia", "Coulrophobia", "Custom"
+      ];
+      var acrophobiaSituations = [
+        "Looking at photo of tall building",
+        "Standing on 2nd floor balcony",
+        "Looking out 5th floor window",
+        "Standing on 5th floor balcony with railing",
+        "Glass elevator going up",
+        "Rooftop with railing",
+        "Looking over edge of 10th floor",
+        "Standing near edge of 15th floor",
+        "Glass floor observation deck",
+        "Open rooftop edge, no railing",
+        "Helicopter hovering near building",
+        "Skydiving / bungee jumping"
+      ];
+      var triggerNames = {
+        Aerophobia: "flying",
+        Claustrophobia: "enclosed spaces",
+        Agoraphobia: "open or crowded places",
+        Arachnophobia: "spiders",
+        Ophidiophobia: "snakes",
+        Cynophobia: "dogs",
+        Trypanophobia: "needles",
+        Astraphobia: "storms",
+        Mysophobia: "germs",
+        Glossophobia: "public speaking",
+        "Social Phobia": "social situations",
+        Thanatophobia: "death",
+        Nosophobia: "illness",
+        Emetophobia: "vomiting",
+        Hemophobia: "blood",
+        Dentophobia: "dental visits",
+        Vehophobia: "driving",
+        Nyctophobia: "darkness",
+        Entomophobia: "insects",
+        Atychiphobia: "failure",
+        Aquaphobia: "water",
+        Brontophobia: "thunder",
+        Coulrophobia: "clowns"
+      };
+      var state = loadState();
+      var timerId = null;
+      var secondsLeft = TIMER_SECONDS;
+      var els = {
+        phobiaSelect: document.getElementById("phobiaSelect"),
+        customWrap: document.getElementById("customPhobiaWrap"),
+        customInput: document.getElementById("customPhobiaInput"),
+        savePhobia: document.getElementById("savePhobiaButton"),
+        selectedPhobia: document.getElementById("selectedPhobiaText"),
+        ratingList: document.getElementById("ratingList"),
+        ratingText: document.getElementById("ratingProgressText"),
+        ratingFill: document.getElementById("ratingProgressFill"),
+        ladderList: document.getElementById("ladderList"),
+        ladderStatus: document.getElementById("ladderStatus"),
+        streakText: document.getElementById("streakText"),
+        progressButton: document.getElementById("progressButton"),
+        dialog: document.getElementById("progressDialog"),
+        closeDialog: document.getElementById("closeProgressButton"),
+        progressSummary: document.getElementById("progressSummary"),
+        statCompleted: document.getElementById("statCompleted"),
+        statStreak: document.getElementById("statStreak"),
+        statStarted: document.getElementById("statStarted"),
+        statLastSession: document.getElementById("statLastSession"),
+        dots: document.getElementById("progressDots"),
+        reset: document.getElementById("resetButton")
+      };
+      init();
+      function init() {
+        populatePhobias();
+        syncSelector();
+        ensureSituations();
+        bindEvents();
+        if (state.activeRungId) {
+          startTimer();
+        }
+        render();
+      }
+      function defaultState() {
+        return {
+          selectedPhobia: "Acrophobia",
+          customPhobia: "",
+          situations: [],
+          completed: {},
+          activeRungId: null,
+          dateStarted: todayIso(),
+          lastSessionDate: null
+        };
+      }
+      function loadState() {
+        try {
+          var saved = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
+          return saved && typeof saved === "object" ? Object.assign(defaultState(), saved) : defaultState();
+        } catch (error) {
+          return defaultState();
+        }
+      }
+      function loadStreak() {
+        try {
+          var saved = JSON.parse(localStorage.getItem(STREAK_KEY) || "null");
+          return saved && typeof saved === "object"
+            ? { count: Number(saved.count) || 0, lastActiveDate: saved.lastActiveDate || null }
+            : { count: 0, lastActiveDate: null };
+        } catch (error) {
+          return { count: 0, lastActiveDate: null };
+        }
+      }
+      function saveState() {
+        localStorage.setItem(STATE_KEY, JSON.stringify(state));
+      }
+      function saveStreak(streak) {
+        localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
+      }
+      function populatePhobias() {
+        els.phobiaSelect.innerHTML = "";
+        phobiaPresets.forEach(function (name) {
+          var option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          els.phobiaSelect.appendChild(option);
+        });
+      }
+      function bindEvents() {
+        els.phobiaSelect.addEventListener("change", function () {
+          updateCustomVisibility();
+          els.selectedPhobia.textContent = "Pending selection: " + activeSelectorLabel();
+        });
+        els.customInput.addEventListener("input", function () {
+          if (els.phobiaSelect.value === "Custom") {
+            els.selectedPhobia.textContent = "Pending selection: " + activeSelectorLabel();
+          }
+        });
+        els.savePhobia.addEventListener("click", saveSelectedPhobia);
+        els.progressButton.addEventListener("click", openProgress);
+        els.closeDialog.addEventListener("click", function () { els.dialog.close(); });
+        els.reset.addEventListener("click", resetAllData);
+      }
+      function syncSelector() {
+        els.phobiaSelect.value = state.selectedPhobia || "Acrophobia";
+        els.customInput.value = state.customPhobia || "";
+        updateCustomVisibility();
+      }
+      function updateCustomVisibility() {
+        els.customWrap.classList.toggle("visible", els.phobiaSelect.value === "Custom");
+      }
+      function saveSelectedPhobia() {
+        var nextPhobia = els.phobiaSelect.value;
+        var nextCustom = els.customInput.value.trim();
+        if (nextPhobia === "Custom" && !nextCustom) {
+          els.customInput.focus();
+          els.selectedPhobia.textContent = "Enter a custom phobia before saving.";
+          return;
+        }
+        if (nextPhobia !== state.selectedPhobia || nextCustom !== state.customPhobia) {
+          state.selectedPhobia = nextPhobia;
+          state.customPhobia = nextCustom;
+          state.situations = [];
+          state.completed = {};
+          state.activeRungId = null;
+          state.dateStarted = todayIso();
+          state.lastSessionDate = null;
+          clearTimer();
+        }
+        ensureSituations();
+        saveState();
+        render();
+      }
+      function activeSelectorLabel() {
+        return els.phobiaSelect.value === "Custom" ? els.customInput.value.trim() || "Custom" : els.phobiaSelect.value;
+      }
+      function statePhobiaLabel() {
+        return state.selectedPhobia === "Custom" ? state.customPhobia || "Custom" : state.selectedPhobia || "Acrophobia";
+      }
+      function ensureSituations() {
+        if (state.situations.length === TOTAL_RUNGS) {
+          return;
+        }
+        state.situations = buildSituationText().map(function (text, index) {
+          return { id: "situation-" + index, text: text, suds: null };
+        });
+        state.completed = {};
+        state.activeRungId = null;
+        saveState();
+      }
+      function buildSituationText() {
+        var phobia = statePhobiaLabel();
+        if (phobia === "Acrophobia") {
+          return acrophobiaSituations.slice();
+        }
+        var trigger = triggerNames[phobia] || phobia.toLowerCase();
+        return [
+          "Thinking about " + trigger,
+          "Reading a short description of " + trigger,
+          "Looking at a simple drawing related to " + trigger,
+          "Looking at a photo of " + trigger,
+          "Watching a short video involving " + trigger,
+          "Standing in the same room as " + trigger,
+          "Being near " + trigger + " with support nearby",
+          "Being near " + trigger + " without immediate support",
+          "Touching or closely approaching " + trigger,
+          "Staying with " + trigger + " for one minute",
+          "Staying with " + trigger + " for several minutes",
+          "Doing a real-life task involving " + trigger
+        ];
+      }
+      function render() {
+        renderHeader();
+        renderRatings();
+        renderLadder();
+      }
+      function renderHeader() {
+        var streak = loadStreak();
+        els.selectedPhobia.textContent = "Saved selection: " + statePhobiaLabel();
+        els.streakText.textContent = streak.lastActiveDate === todayIso()
+          ? "\uD83D\uDD25 " + streak.count + "-day streak"
+          : "Start today to keep your streak!";
+      }
+      function renderRatings() {
+        var rated = state.situations.filter(function (item) { return item.suds !== null; }).length;
+        els.ratingText.textContent = rated + "/" + TOTAL_RUNGS + " completed";
+        els.ratingFill.style.width = (rated / TOTAL_RUNGS * 100) + "%";
+        els.ratingList.innerHTML = "";
+        state.situations.forEach(function (situation, index) {
+          els.ratingList.appendChild(createRatingItem(situation, index));
+        });
+      }
+      function createRatingItem(situation, index) {
+        var item = document.createElement("article");
+        var head = document.createElement("div");
+        var title = document.createElement("h3");
+        var value = document.createElement("div");
+        var slider = document.createElement("input");
+        var anchors = document.createElement("div");
+        item.className = "rating-item";
+        head.className = "rating-head";
+        value.className = "rating-value";
+        slider.type = "range";
+        slider.min = "1";
+        slider.max = "10";
+        slider.value = situation.suds || 5;
+        slider.setAttribute("aria-label", situation.text + " SUDS rating");
+        title.textContent = (index + 1) + ". " + situation.text;
+        value.textContent = situation.suds === null ? "Not set" : situation.suds + "/10";
+        anchors.className = "range-anchors";
+        anchors.innerHTML = "<span>&#128524; calm</span><span>&#128560; anxious</span><span>&#128561; terrified</span>";
+        slider.addEventListener("input", function () {
+          setSuds(situation.id, Number(slider.value));
+        });
+        head.appendChild(title);
+        head.appendChild(value);
+        item.appendChild(head);
+        item.appendChild(slider);
+        item.appendChild(anchors);
+        return item;
+      }
+      function setSuds(id, suds) {
+        state.situations = state.situations.map(function (item) {
+          return item.id === id ? Object.assign({}, item, { suds: suds }) : item;
+        });
+        saveState();
+        render();
+      }
+      function getRatedLadder() {
+        return state.situations
+          .filter(function (item) { return item.suds !== null; })
+          .slice()
+          .sort(function (a, b) {
+            var aIndex = Number(a.id.replace("situation-", ""));
+            var bIndex = Number(b.id.replace("situation-", ""));
+            return a.suds === b.suds ? aIndex - bIndex : a.suds - b.suds;
+          });
+      }
+      function renderLadder() {
+        var ladder = getRatedLadder();
+        els.ladderList.innerHTML = "";
+        if (ladder.length < TOTAL_RUNGS) {
+          els.ladderStatus.textContent = "Rate all 12 situations to build your ladder.";
+          els.ladderList.appendChild(emptyNote("Your ladder appears here after all SUDS ratings are complete."));
+          return;
+        }
+        els.ladderStatus.textContent = completedCount() + " of " + TOTAL_RUNGS + " rungs completed. Complete rungs in order.";
+        ladder.forEach(function (rung, index) {
+          els.ladderList.appendChild(createRung(rung, index, ladder));
+        });
+      }
+      function createRung(rung, index, ladder) {
+        var isDone = Boolean(state.completed[rung.id]);
+        var isActive = state.activeRungId === rung.id;
+        var isLocked = !isDone && !isActive && index !== nextUnlockedIndex(ladder);
+        var level = difficultyLevel(rung.suds);
+        var article = document.createElement("article");
+        var number = document.createElement("div");
+        var content = document.createElement("div");
+        var title = document.createElement("h3");
+        var meta = document.createElement("div");
+        var check = document.createElement("input");
+        var activeBox = document.createElement("div");
+        article.className = "rung " + level + (isDone ? " done" : "") + (isActive ? " active" : "") + (isLocked ? " locked" : "");
+        article.addEventListener("click", function (event) {
+          if (event.target.tagName !== "BUTTON") {
+            startRung(rung.id, isLocked, isDone);
+          }
+        });
+        number.className = "rung-number";
+        number.textContent = index + 1;
+        title.textContent = rung.text;
+        meta.className = "rung-meta";
+        meta.appendChild(badge("SUDS " + rung.suds, level));
+        meta.appendChild(textSpan(isDone ? "Completed " + formatDateTime(state.completed[rung.id]) : rungStatusText(isLocked, isActive)));
+        check.type = "checkbox";
+        check.className = "checkbox";
+        check.checked = isDone;
+        check.setAttribute("aria-label", "Rung " + (index + 1) + " complete");
+        activeBox.className = "active-box";
+        activeBox.appendChild(createActiveTimer(rung.id));
+        content.appendChild(title);
+        content.appendChild(meta);
+        article.appendChild(number);
+        article.appendChild(content);
+        article.appendChild(check);
+        article.appendChild(activeBox);
+        return article;
+      }
+      function badge(text, level) {
+        var span = document.createElement("span");
+        span.className = "badge " + level;
+        span.textContent = text;
+        return span;
+      }
+      function textSpan(text) {
+        var span = document.createElement("span");
+        span.textContent = text;
+        return span;
+      }
+      function emptyNote(text) {
+        var div = document.createElement("div");
+        div.className = "empty-note";
+        div.textContent = text;
+        return div;
+      }
+      function rungStatusText(isLocked, isActive) {
+        if (isActive) {
+          return "In progress";
+        }
+        return isLocked ? "Locked" : "Unlocked";
+      }
+      function difficultyLevel(suds) {
+        if (suds <= 3) {
+          return "low";
+        }
+        if (suds <= 6) {
+          return "medium";
+        }
+        return suds <= 8 ? "high" : "extreme";
+      }
+      function createActiveTimer(rungId) {
+        var wrap = document.createElement("div");
+        var row = document.createElement("div");
+        var label = document.createElement("div");
+        var timer = document.createElement("div");
+        var actions = document.createElement("div");
+        var didIt = document.createElement("button");
+        var panic = document.createElement("button");
+        row.className = "timer-row";
+        label.innerHTML = "<strong>Exposure timer</strong><p>Stay with the rung, then confirm completion when ready.</p>";
+        timer.className = "timer";
+        timer.id = "activeTimer";
+        timer.textContent = secondsLeft + "s";
+        actions.className = "timer-actions";
+        didIt.type = "button";
+        didIt.textContent = "I did it";
+        didIt.disabled = secondsLeft > 0;
+        didIt.addEventListener("click", function () { completeRung(rungId); });
+        panic.type = "button";
+        panic.className = "secondary";
+        panic.textContent = "Panic button";
+        panic.addEventListener("click", cancelActiveRung);
+        actions.appendChild(didIt);
+        actions.appendChild(panic);
+        row.appendChild(label);
+        row.appendChild(timer);
+        wrap.appendChild(row);
+        wrap.appendChild(actions);
+        return wrap;
+      }
+      function nextUnlockedIndex(ladder) {
+        for (var index = 0; index < ladder.length; index += 1) {
+          if (!state.completed[ladder[index].id]) {
+            return index;
+          }
+        }
+        return -1;
+      }
+      function startRung(rungId, isLocked, isDone) {
+        if (isLocked || isDone) {
+          return;
+        }
+        state.activeRungId = rungId;
+        secondsLeft = TIMER_SECONDS;
+        saveState();
+        startTimer();
+        render();
+      }
+      function startTimer() {
+        clearTimer();
+        timerId = window.setInterval(function () {
+          secondsLeft -= 1;
+          updateTimerDisplay();
+          if (secondsLeft <= 0) {
+            secondsLeft = 0;
+            clearTimer();
+            updateTimerDisplay();
+          }
+        }, 1000);
+      }
+      function clearTimer() {
+        if (timerId) {
+          window.clearInterval(timerId);
+          timerId = null;
+        }
+      }
+      function updateTimerDisplay() {
+        var timer = document.getElementById("activeTimer");
+        var button = document.querySelector(".rung.active .timer-actions button");
+        if (timer) {
+          timer.textContent = Math.max(secondsLeft, 0) + "s";
+        }
+        if (button && secondsLeft <= 0) {
+          button.disabled = false;
+        }
+      }
+      function completeRung(rungId) {
+        state.completed[rungId] = new Date().toISOString();
+        state.activeRungId = null;
+        state.lastSessionDate = todayIso();
+        updateStreakForToday();
+        clearTimer();
+        secondsLeft = TIMER_SECONDS;
+        saveState();
+        render();
+      }
+      function cancelActiveRung() {
+        state.activeRungId = null;
+        clearTimer();
+        secondsLeft = TIMER_SECONDS;
+        saveState();
+        render();
+      }
+      function updateStreakForToday() {
+        var streak = loadStreak();
+        var today = todayIso();
+        if (streak.lastActiveDate !== today) {
+          streak.count = streak.lastActiveDate === yesterdayIso() ? streak.count + 1 : 1;
+          streak.lastActiveDate = today;
+        }
+        saveStreak(streak);
+      }
+      function completedCount() {
+        return Object.keys(state.completed || {}).length;
+      }
+      function openProgress() {
+        renderProgress();
+        if (typeof els.dialog.showModal === "function") {
+          els.dialog.showModal();
+        } else {
+          els.dialog.setAttribute("open", "open");
+        }
+      }
+      function renderProgress() {
+        var completed = completedCount();
+        var streak = loadStreak();
+        els.progressSummary.textContent = completed + " of " + TOTAL_RUNGS + " rungs completed";
+        els.statCompleted.textContent = completed + "/" + TOTAL_RUNGS;
+        els.statStreak.textContent = String(streak.count);
+        els.statStarted.textContent = state.dateStarted ? formatDate(state.dateStarted) : "Not started";
+        els.statLastSession.textContent = state.lastSessionDate ? formatDate(state.lastSessionDate) : "No sessions";
+        els.dots.innerHTML = "";
+        for (var index = 0; index < TOTAL_RUNGS; index += 1) {
+          var dot = document.createElement("span");
+          dot.className = "dot" + (index < completed ? " filled" : "");
+          els.dots.appendChild(dot);
+        }
+      }
+      function resetAllData() {
+        if (!window.confirm("Clear all Fear Ladder data from this browser?")) {
+          return;
+        }
+        clearTimer();
+        localStorage.removeItem(STATE_KEY);
+        localStorage.removeItem(STREAK_KEY);
+        state = defaultState();
+        secondsLeft = TIMER_SECONDS;
+        syncSelector();
+        ensureSituations();
+        saveStreak({ count: 0, lastActiveDate: null });
+        render();
+      }
+      function todayIso() {
+        return new Date().toISOString().slice(0, 10);
+      }
+      function yesterdayIso() {
+        var date = new Date();
+        date.setDate(date.getDate() - 1);
+        return date.toISOString().slice(0, 10);
+      }
+      function formatDate(isoDate) {
+        var parts = isoDate.split("-");
+        return parts[1] + "/" + parts[2] + "/" + parts[0];
+      }
+      function formatDateTime(iso) {
+        return new Date(iso).toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit"
+        });
+      }
+    }());
+  </script>
+</body>
+</html>
+
