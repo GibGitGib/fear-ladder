@@ -924,6 +924,9 @@
         slider.addEventListener("input", function () {
           setSuds(situation.id, Number(slider.value));
         });
+        slider.addEventListener("change", function () {
+          setSuds(situation.id, Number(slider.value));
+        });
         head.appendChild(title);
         head.appendChild(value);
         item.appendChild(head);
