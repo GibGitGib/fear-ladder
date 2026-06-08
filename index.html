@@ -854,7 +854,7 @@
           return;
         }
         state.situations = buildSituationText().map(function (text, index) {
-          return { id: "situation-" + index, text: text, suds: null };
+          return { id: "situation-" + index, text: text, suds: 5 };
         });
         state.completed = {};
         state.activeRungId = null;
