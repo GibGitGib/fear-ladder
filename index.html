@@ -268,6 +268,149 @@
       margin-top: 1rem;
     }
 
+    /* ── Swipe card deck ────────────────────────────────────── */
+
+    .swipe-deck {
+      position: relative;
+      height: 340px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+
+    .swipe-card {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      border-radius: var(--r);
+      background: var(--panel);
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: transform 300ms ease-out, opacity 300ms ease-out;
+      will-change: transform;
+      touch-action: none;
+    }
+
+    .swipe-card:active { cursor: grabbing; }
+
+    .swipe-card .card-emoji {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      line-height: 1;
+    }
+
+    .swipe-card .card-text {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 0.5rem;
+    }
+
+    .swipe-card .card-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .swipe-counter {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin-top: -0.25rem;
+    }
+
+    /* Swipe hint labels that appear during drag */
+    .swipe-hint {
+      position: absolute;
+      top: 20px;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      opacity: 0;
+      transition: opacity 150ms ease-out;
+      pointer-events: none;
+    }
+    .swipe-hint.left  { left: 16px;  background: var(--sage-wash); color: var(--sage-dark); }
+    .swipe-hint.right { right: 16px; background: var(--coral); color: #fff;; }
+    .swipe-hint.visible { opacity: 1; }
+
+    /* Ghost cards behind the active one */
+    .swipe-card.ghost {
+      transform: scale(0.95);
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* Loading reveal */
+    .loading-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 3rem 1.5rem;
+      text-align: center;
+      animation: fadeUp 400ms ease-out both;
+    }
+
+    .loading-spinner {
+      width: 52px;
+      height: 52px;
+      border: 4px solid var(--blue-wash);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    .loading-text {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .loading-text strong {
+      display: block;
+      color: var(--text);
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Reveal banner */
+    .reveal-banner {
+      padding: 1.25rem;
+      border-radius: var(--r);
+      background: var(--sage-wash);
+      border: 1.5px solid var(--sage);
+      text-align: center;
+      animation: fadeUp 500ms ease-out both;
+    }
+
+    .reveal-banner .emoji { font-size: 2rem; margin-bottom: 0.5rem; }
+    .reveal-banner h3 { color: var(--sage-dark); margin-bottom: 0.3rem; }
+    .reveal-banner p  { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Animations ─────────────────────────────────────────── */
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp {
+      0%   { opacity: 0; transform: translateY(12px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideDown {
+      0%   { opacity: 0; transform: translateY(-8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Old rating item (kept for reference, hidden in swipe mode) ── */
+
     .rating-item {
       padding: 1rem;
       border: 1.5px solid var(--border);
@@ -629,13 +772,13 @@
         </div>
         <p id="selectedPhobiaText"></p>
       </section>
-      <section class="panel">
+      <section class="panel" id="swipePanel">
         <h2>2. Rate Situations</h2>
-        <p id="ratingProgressText">0/12 completed</p>
-        <div class="progress-shell" aria-hidden="true"><div class="progress-fill" id="ratingProgressFill"></div></div>
-        <div class="rating-list" id="ratingList"></div>
+        <p id="ratingProgressText">Swipe to rate each situation</p>
+        <div class="swipe-deck" id="swipeDeck"></div>
+        <div class="swipe-counter" id="swipeCounter"></div>
       </section>
-      <section class="panel full">
+      <section class="panel" id="ladderPanel" style="display:none">
         <h2>3. Climb Your Ladder</h2>
         <p id="ladderStatus">Rate all 12 situations to build your ladder.</p>
         <div class="ladder" id="ladderList"></div>
@@ -720,15 +863,24 @@
       var state = loadState();
       var timerId = null;
       var secondsLeft = TIMER_SECONDS;
+      var swipeIndex = 0;
+      var isSwiping = false;
+      var swipeStartX = 0;
+      var swipeStartY = 0;
+      var swipeCurrentX = 0;
+      var showLoadingScreen = false;
+      var loadingTimerId = null;
       var els = {
         phobiaSelect: document.getElementById("phobiaSelect"),
         customWrap: document.getElementById("customPhobiaWrap"),
         customInput: document.getElementById("customPhobiaInput"),
         savePhobia: document.getElementById("savePhobiaButton"),
         selectedPhobia: document.getElementById("selectedPhobiaText"),
-        ratingList: document.getElementById("ratingList"),
+        ratingList: document.getElementById("swipeDeck"),
         ratingText: document.getElementById("ratingProgressText"),
-        ratingFill: document.getElementById("ratingProgressFill"),
+        ratingFill: document.getElementById("swipeCounter"),
+        swipePanel: document.getElementById("swipePanel"),
+        ladderPanel: document.getElementById("ladderPanel"),
         ladderList: document.getElementById("ladderList"),
         ladderStatus: document.getElementById("ladderStatus"),
         streakText: document.getElementById("streakText"),
@@ -858,6 +1010,9 @@
         });
         state.completed = {};
         state.activeRungId = null;
+        swipeIndex = 0;
+        showLoadingScreen = false;
+        if (loadingTimerId) { clearTimeout(loadingTimerId); loadingTimerId = null; }
         saveState();
       }
       function buildSituationText() {
@@ -883,8 +1038,21 @@
       }
       function render() {
         renderHeader();
+        if (showLoadingScreen) {
+          renderLoadingScreen();
+          return;
+        }
+        var allRated = state.situations.length === TOTAL_RUNGS &&
+          state.situations.every(function (s) { return s.suds !== null; });
+        if (allRated) {
+          els.swipePanel.style.display = "none";
+          els.ladderPanel.style.display = "block";
+        } else {
+          els.swipePanel.style.display = "block";
+          els.ladderPanel.style.display = "none";
+        }
         renderRatings();
-        renderLadder();
+        if (allRated) renderLadder();
       }
       function renderHeader() {
         var streak = loadStreak();
@@ -894,45 +1062,178 @@
           : "Start today to keep your streak!";
       }
       function renderRatings() {
+        if (showLoadingScreen) {
+          renderLoadingScreen();
+          return;
+        }
         var rated = state.situations.filter(function (item) { return item.suds !== null; }).length;
-        els.ratingText.textContent = rated + "/" + TOTAL_RUNGS + " completed";
-        els.ratingFill.style.width = (rated / TOTAL_RUNGS * 100) + "%";
-        els.ratingList.innerHTML = "";
-        state.situations.forEach(function (situation, index) {
-          els.ratingList.appendChild(createRatingItem(situation, index));
-        });
+        if (rated === TOTAL_RUNGS) {
+          // All rated — show loading, then reveal ladder
+          if (!showLoadingScreen) {
+            showLoadingScreen = true;
+            loadingTimerId = setTimeout(function () {
+              showLoadingScreen = false;
+              els.swipePanel.style.display = "none";
+              els.ladderPanel.style.display = "block";
+              renderLadder();
+              window.scrollTo({ top: els.ladderPanel.offsetTop - 20, behavior: "smooth" });
+            }, 2200);
+            render();
+          }
+          return;
+        }
+        els.ratingText.textContent = rated + "/" + TOTAL_RUNGS + " rated";
+        renderSwipeDeck();
       }
-      function createRatingItem(situation, index) {
-        var item = document.createElement("article");
-        var head = document.createElement("div");
-        var title = document.createElement("h3");
-        var value = document.createElement("div");
-        var slider = document.createElement("input");
-        var anchors = document.createElement("div");
-        item.className = "rating-item";
-        head.className = "rating-head";
-        value.className = "rating-value";
-        slider.type = "range";
-        slider.min = "1";
-        slider.max = "10";
-        slider.value = situation.suds || 5;
-        slider.setAttribute("aria-label", situation.text + " SUDS rating");
-        title.textContent = (index + 1) + ". " + situation.text;
-        value.textContent = situation.suds === null ? "Not set" : situation.suds + "/10";
-        anchors.className = "range-anchors";
-        anchors.innerHTML = "<span>&#128524; calm</span><span>&#128560; anxious</span><span>&#128561; terrified</span>";
-        slider.addEventListener("input", function () {
-          setSuds(situation.id, Number(slider.value));
+
+      function renderSwipeDeck() {
+        els.ratingList.innerHTML = "";
+        els.ratingFill.textContent = (swipeIndex + 1) + "/" + TOTAL_RUNGS;
+
+        var unrated = state.situations.filter(function (item) { return item.suds === null; });
+        if (unrated.length === 0) return;
+
+        var currentSit = unrated[0];
+        var ghosts = unrated.slice(1, 3);
+
+        // Ghost cards behind
+        ghosts.forEach(function (_, i) {
+          var ghost = document.createElement("div");
+          ghost.className = "swipe-card ghost";
+          ghost.style.transform = "scale(" + (0.95 - i * 0.03) + ")";
+          ghost.style.zIndex = String(ghosts.length - i);
+          els.ratingList.appendChild(ghost);
         });
-        slider.addEventListener("change", function () {
-          setSuds(situation.id, Number(slider.value));
+
+        // Active card
+        var card = document.createElement("div");
+        card.className = "swipe-card";
+        card.style.zIndex = String(ghosts.length + 1);
+        card.innerHTML =
+          '<div class="card-emoji">' + emojiForSituation(currentSit.text) + '</div>' +
+          '<div class="card-text">' + currentSit.text + '</div>' +
+          '<div class="card-sub">Swipe left if not scary · Swipe right if terrifying</div>';
+
+        // Hint labels
+        var hintLeft = document.createElement("div");
+        hintLeft.className = "swipe-hint left";
+        hintLeft.textContent = "Not scary";
+        var hintRight = document.createElement("div");
+        hintRight.className = "swipe-hint right";
+        hintRight.textContent = "Terrifying";
+        card.appendChild(hintLeft);
+        card.appendChild(hintRight);
+
+        // Touch/mouse handlers
+        card.addEventListener("pointerdown", function (e) {
+          if (isSwiping) return;
+          isSwiping = true;
+          swipeStartX = e.clientX;
+          swipeStartY = e.clientY;
+          card.setPointerCapture(e.pointerId);
         });
-        head.appendChild(title);
-        head.appendChild(value);
-        item.appendChild(head);
-        item.appendChild(slider);
-        item.appendChild(anchors);
-        return item;
+
+        card.addEventListener("pointermove", function (e) {
+          if (!isSwiping) return;
+          swipeCurrentX = e.clientX;
+          var dx = swipeCurrentX - swipeStartX;
+          var dy = e.clientY - swipeStartY;
+
+          // Only horizontal swipe
+          if (Math.abs(dy) > Math.abs(dx) * 1.2) return;
+
+          var rotation = dx * 0.05;
+          card.style.transform = "translateX(" + dx + "px) rotate(" + rotation + "deg)";
+          card.style.transition = "none";
+
+          // Show hints
+          if (dx < -40) hintLeft.classList.add("visible");
+          else hintLeft.classList.remove("visible");
+          if (dx > 40) hintRight.classList.add("visible");
+          else hintRight.classList.remove("visible");
+        });
+
+        card.addEventListener("pointerup", function (e) {
+          if (!isSwiping) return;
+          isSwiping = false;
+          var dx = swipeCurrentX - swipeStartX;
+          var threshold = 80;
+
+          card.style.transition = "transform 300ms ease-out, opacity 300ms ease-out";
+          hintLeft.classList.remove("visible");
+          hintRight.classList.remove("visible");
+
+          if (Math.abs(dx) > threshold) {
+            var suds = dx < 0
+              ? Math.max(1, Math.min(5, Math.round(Math.abs(dx) / 30)))
+              : Math.max(6, Math.min(10, Math.round(5 + dx / 30)));
+            var exitX = dx < 0 ? -500 : 500;
+            card.style.transform = "translateX(" + exitX + "px) rotate(" + (dx * 0.05) + "deg)";
+            card.style.opacity = "0";
+
+            setTimeout(function () {
+              setSuds(currentSit.id, suds);
+              swipeIndex++;
+            }, 300);
+          } else {
+            card.style.transform = "translateX(0) rotate(0deg)";
+          }
+
+          swipeCurrentX = swipeStartX;
+        });
+
+        card.addEventListener("pointercancel", function () {
+          isSwiping = false;
+          card.style.transition = "transform 300ms ease-out";
+          card.style.transform = "translateX(0) rotate(0deg)";
+          hintLeft.classList.remove("visible");
+          hintRight.classList.remove("visible");
+        });
+
+        els.ratingList.appendChild(card);
+      }
+
+      function emojiForSituation(text) {
+        var t = text.toLowerCase();
+        if (t.includes("photo")) return "\uD83D\uDCF7";
+        if (t.includes("window") || t.includes("looking")) return "\uD83D\uDC40";
+        if (t.includes("balcony") || t.includes("standing")) return "\uD83C\uDFE2";
+        if (t.includes("elevator")) return "\u2195\uFE0F";
+        if (t.includes("rooftop") || t.includes("edge")) return "\uD83C\uDF06";
+        if (t.includes("glass floor") || t.includes("observation")) return "\uD83D\uDE31";
+        if (t.includes("helicopter") || t.includes("hovering")) return "\uD83D\uDE81";
+        if (t.includes("skydiving") || t.includes("bungee")) return "\uD83E\uDE82";
+        if (t.includes("flying") || t.includes("flight") || t.includes("plane")) return "\u2708\uFE0F";
+        if (t.includes("spider")) return "\uD83D\uDD77\uFE0F";
+        if (t.includes("snake")) return "\uD83D\uDC0D";
+        if (t.includes("dog")) return "\uD83D\uDC15";
+        if (t.includes("needle")) return "\uD83D\uDC89";
+        if (t.includes("storm") || t.includes("thunder")) return "\u26C8\uFE0F";
+        if (t.includes("germ")) return "\uD83E\uDDA0";
+        if (t.includes("public speak") || t.includes("speech")) return "\uD83C\uDF99\uFE0F";
+        if (t.includes("social")) return "\uD83D\uDC65";
+        if (t.includes("dark")) return "\uD83C\uDF11";
+        if (t.includes("blood")) return "\uD83E\uDE78";
+        if (t.includes("water")) return "\uD83C\uDF0A";
+        if (t.includes("clown")) return "\uD83E\uDD21";
+        if (t.includes("driving") || t.includes("car")) return "\uD83D\uDE97";
+        if (t.includes("dentist") || t.includes("dental")) return "\uD83E\uDDB7";
+        if (t.includes("enclosed") || t.includes("tight") || t.includes("claustro")) return "\uD83D\uDCE6";
+        if (t.includes("crowd") || t.includes("open")) return "\uD83C\uDF1F";
+        return "\u26A1";
+      }
+
+      function renderLoadingScreen() {
+        els.ratingList.innerHTML =
+          '<div class="loading-screen">' +
+          '<div class="loading-spinner"></div>' +
+          '<div class="loading-text">' +
+          '<strong>Analyzing your responses...</strong>' +
+          'Building your personalized fear ladder' +
+          '</div>' +
+          '</div>';
+        els.ratingText.textContent = TOTAL_RUNGS + "/" + TOTAL_RUNGS + " rated";
+        els.ratingFill.textContent = "";
       }
       function setSuds(id, suds) {
         state.situations = state.situations.map(function (item) {
@@ -1171,6 +1472,9 @@
         localStorage.removeItem(STREAK_KEY);
         state = defaultState();
         secondsLeft = TIMER_SECONDS;
+        swipeIndex = 0;
+        showLoadingScreen = false;
+        if (loadingTimerId) { clearTimeout(loadingTimerId); loadingTimerId = null; }
         syncSelector();
         ensureSituations();
         saveStreak({ count: 0, lastActiveDate: null });
