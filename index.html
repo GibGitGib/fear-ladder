@@ -400,6 +400,16 @@
     /* ── Animations ─────────────────────────────────────────── */
 
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes breathCircle {
+      0%, 100% { transform: scale(1); }
+      30%  { transform: scale(1.3); }
+      60%  { transform: scale(1.3); }
+      85%  { transform: scale(1); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50%  { opacity: 1; }
+    }
     @keyframes fadeUp {
       0%   { opacity: 0; transform: translateY(12px); }
       100% { opacity: 1; transform: translateY(0); }
@@ -783,6 +793,9 @@
         <p id="ladderStatus">Rate all 12 situations to build your ladder.</p>
         <div class="ladder" id="ladderList"></div>
       </section>
+      <section class="panel" id="postRungPanel" style="display:none">
+        <div id="postRungContent"></div>
+      </section>
     </section>
     <section class="settings">
       <button type="button" class="danger" id="resetButton">Reset</button>
@@ -870,6 +883,10 @@
       var swipeCurrentX = 0;
       var showLoadingScreen = false;
       var loadingTimerId = null;
+      var postRungState = null;    // null | "centering" | "permission" | "q1" | "q2" | "q3"
+      var postRungData = null;    // { rungId, originalSuds }
+      var postRungTimerId = null;
+      var postRungSwipeIdx = 0;
       var els = {
         phobiaSelect: document.getElementById("phobiaSelect"),
         customWrap: document.getElementById("customPhobiaWrap"),
@@ -881,6 +898,8 @@
         ratingFill: document.getElementById("swipeCounter"),
         swipePanel: document.getElementById("swipePanel"),
         ladderPanel: document.getElementById("ladderPanel"),
+        postRungPanel: document.getElementById("postRungPanel"),
+        postRungContent: document.getElementById("postRungContent"),
         ladderList: document.getElementById("ladderList"),
         ladderStatus: document.getElementById("ladderStatus"),
         streakText: document.getElementById("streakText"),
@@ -1412,14 +1431,322 @@
         }
       }
       function completeRung(rungId) {
+        var situation = state.situations.find(function (s) { return s.id === rungId; });
         state.completed[rungId] = new Date().toISOString();
-        state.activeRungId = null;
         state.lastSessionDate = todayIso();
         updateStreakForToday();
         clearTimer();
         secondsLeft = TIMER_SECONDS;
+
+        // Start post-rung debrief flow
+        postRungState = "centering";
+        postRungData = {
+          rungId: rungId,
+          originalSuds: situation ? situation.suds : null,
+          sudsAfter: null,
+          predictionResult: null,
+          learningChoice: null,
+          allStepsDone: false
+        };
+        postRungSwipeIdx = 0;
+
+        // Auto-advance from centering after 6.5s
+        postRungTimerId = setTimeout(function () {
+          if (postRungState === "centering") {
+            postRungState = "permission";
+            renderPostRung();
+          }
+        }, 6500);
+
+        saveState();
+        renderPostRung();
+      }
+
+      function renderPostRung() {
+        els.ladderPanel.style.display = "none";
+        els.postRungPanel.style.display = "block";
+        els.postRungContent.innerHTML = "";
+
+        switch (postRungState) {
+          case "centering": renderCenteringScreen(); break;
+          case "permission": renderPermissionScreen(); break;
+          case "q1": renderDebriefQ1(); break;
+          case "q2": renderDebriefQ2(); break;
+          case "q3": renderDebriefQ3(); break;
+          default: finishPostRung(); break;
+        }
+      }
+
+      function renderCenteringScreen() {
+        var html =
+          '<div class="loading-screen" style="padding:2.5rem 1rem;gap:1.5rem">' +
+          '<div style="font-size:3rem;animation:pulse 2.5s ease-in-out infinite">\uD83E\uDEC1</div>' +
+          '<div class="loading-text">' +
+          '<strong>Breathe in through your nose...</strong>' +
+          'Hold it for a moment. Let the feeling settle.</div>' +
+          '<div style="width:80px;height:80px;border-radius:50%;background:var(--blue-wash);display:flex;align-items:center;justify-content:center;animation:breathCircle 6s ease-in-out">' +
+          '<span style="font-size:0.8rem;color:var(--blue);font-weight:700" id="breathLabel">Inhale</span>' +
+          '</div>' +
+          '<div class="loading-text">' +
+          '<strong>Exhale slowly through your mouth.</strong>' +
+          'You just faced something difficult. You\'re returning to life more empowered and less afraid.' +
+          '</div>' +
+          '</div>';
+        els.postRungContent.innerHTML = html;
+
+        // Animate breath label
+        var label = document.getElementById("breathLabel");
+        if (label) {
+          setTimeout(function () { label.textContent = "Hold"; }, 2000);
+          setTimeout(function () { label.textContent = "Exhale"; }, 3500);
+          setTimeout(function () { label.textContent = "Rest"; }, 5000);
+        }
+      }
+
+      function renderPermissionScreen() {
+        if (postRungTimerId) { clearTimeout(postRungTimerId); }
+        postRungSwipeIdx = 0;
+        els.postRungContent.innerHTML =
+          '<h2 style="text-align:center;margin-bottom:0.75rem">\uD83C\uDF3F</h2>' +
+          '<div class="swipe-deck" style="height:260px" id="postSwipeDeck"></div>';
+        renderPostSwipeCard(
+          "Would you like to reflect for a moment?",
+          "It helps your brain lock in the progress you just made.",
+          "Skip",
+          "Reflect",
+          function () {
+            postRungState = "q1";
+            renderPostRung();
+          },
+          function () { finishPostRung(); }
+        );
+      }
+
+      function renderDebriefQ1() {
+        postRungSwipeIdx = 0;
+        els.postRungContent.innerHTML =
+          '<h2 style="text-align:center;margin-bottom:0.5rem">\uD83D\uDCCA</h2>' +
+          '<p style="text-align:center;font-size:0.9rem;color:var(--muted);margin-bottom:1rem">You rated this ' + postRungData.originalSuds + '/10 before. How do you feel <em>now</em>?</p>' +
+          '<div class="swipe-deck" style="height:260px" id="postSwipeDeck"></div>';
+        renderPostSwipeCard(
+          "How do you feel now?",
+          "Swipe right for higher anxiety, left for calmer.",
+          "Calmer",
+          "Still anxious",
+          function (suds) { // left — calmer
+            postRungData.sudsAfter = Math.max(1, Math.min(10, Math.round(Math.abs(suds) / 30)));
+          },
+          function () {
+            postRungState = "q2";
+            renderPostRung();
+          },
+          function (suds) { // right — still anxious
+            postRungData.sudsAfter = Math.max(6, Math.min(10, Math.round(6 + suds / 30)));
+          },
+          true // isSlider
+        );
+      }
+
+      function renderDebriefQ2() {
+        postRungSwipeIdx = 0;
+        els.postRungContent.innerHTML =
+          '<h2 style="text-align:center;margin-bottom:0.75rem">\u2753</h2>' +
+          '<div class="swipe-deck" style="height:240px" id="postSwipeDeck"></div>';
+        renderPostSwipeCard(
+          "Did anything bad actually happen?",
+          "Check in with reality. Did the thing you feared come true?",
+          "No, I\'m fine",
+          "Yes, it was bad",
+          function () {
+            postRungData.predictionResult = false;
+            postRungState = "q3";
+            renderPostRung();
+          },
+          function () {
+            postRungData.predictionResult = true;
+            postRungState = "q3";
+            renderPostRung();
+          }
+        );
+      }
+
+      function renderDebriefQ3() {
+        postRungSwipeIdx = 0;
+        els.postRungContent.innerHTML =
+          '<h2 style="text-align:center;margin-bottom:0.75rem">\uD83D\uDCA1</h2>' +
+          '<div class="swipe-deck" style="height:260px" id="postSwipeDeck"></div>';
+
+        var learnings = [
+          "I can handle this",
+          "It wasn\'t as bad as I thought",
+          "My anxiety went down on its own",
+          "I\'m stronger than I thought"
+        ];
+        var currentLearning = 0;
+
+        function showLearningCard() {
+          var deck = document.getElementById("postSwipeDeck");
+          if (!deck) return;
+          deck.innerHTML = "";
+          var card = document.createElement("div");
+          card.className = "swipe-card";
+          card.style.zIndex = "1";
+          card.innerHTML =
+            '<div class="card-emoji">\uD83D\uDCAD</div>' +
+            '<div class="card-text" style="font-size:1.2rem">' + learnings[currentLearning] + '</div>' +
+            '<div class="card-sub">Swipe right if this resonates · Swipe left for other options</div>';
+
+          var hintLeft = document.createElement("div");
+          hintLeft.className = "swipe-hint left";
+          hintLeft.textContent = "Next";
+          var hintRight = document.createElement("div");
+          hintRight.className = "swipe-hint right";
+          hintRight.textContent = "This one!";
+          card.appendChild(hintLeft);
+          card.appendChild(hintRight);
+
+          var startX = 0, currentX = 0, swiping = false;
+          card.addEventListener("pointerdown", function (e) {
+            swiping = true; startX = e.clientX; card.setPointerCapture(e.pointerId);
+          });
+          card.addEventListener("pointermove", function (e) {
+            if (!swiping) return;
+            currentX = e.clientX;
+            var dx = currentX - startX;
+            card.style.transform = "translateX(" + dx + "px) rotate(" + (dx * 0.03) + "deg)";
+            card.style.transition = "none";
+            if (dx < -40) hintLeft.classList.add("visible"); else hintLeft.classList.remove("visible");
+            if (dx > 40) hintRight.classList.add("visible"); else hintRight.classList.remove("visible");
+          });
+          card.addEventListener("pointerup", function () {
+            if (!swiping) return;
+            swiping = false;
+            var dx = currentX - startX;
+            card.style.transition = "transform 300ms ease-out, opacity 300ms ease-out";
+            hintLeft.classList.remove("visible");
+            hintRight.classList.remove("visible");
+
+            if (dx > 60) {
+              // Right swipe — picked this one
+              postRungData.learningChoice = learnings[currentLearning];
+              card.style.transform = "translateX(500px)"; card.style.opacity = "0";
+              setTimeout(function () { finishPostRung(); }, 300);
+            } else if (dx < -60) {
+              // Left swipe — next option
+              card.style.transform = "translateX(-500px)"; card.style.opacity = "0";
+              currentLearning = (currentLearning + 1) % learnings.length;
+              setTimeout(showLearningCard, 300);
+            } else {
+              card.style.transform = "translateX(0) rotate(0deg)";
+            }
+            currentX = startX;
+          });
+          card.addEventListener("pointercancel", function () {
+            swiping = false;
+            card.style.transition = "transform 300ms ease-out";
+            card.style.transform = "translateX(0) rotate(0deg)";
+          });
+          deck.appendChild(card);
+        }
+        showLearningCard();
+      }
+
+      function renderPostSwipeCard(text, sub, leftLabel, rightLabel, onLeft, onRight, onRightComplete, isSlider) {
+        var deck = document.getElementById("postSwipeDeck");
+        if (!deck) return;
+        var card = document.createElement("div");
+        card.className = "swipe-card";
+        card.style.zIndex = "1";
+        card.innerHTML =
+          '<div class="card-emoji" style="font-size:2.5rem">' + (isSlider ? '\uD83D\uDCCF' : '\u270C\uFE0F') + '</div>' +
+          '<div class="card-text">' + text + '</div>' +
+          '<div class="card-sub">' + sub + '</div>';
+
+        var hintLeft = document.createElement("div");
+        hintLeft.className = "swipe-hint left";
+        hintLeft.textContent = leftLabel || "Left";
+        var hintRight = document.createElement("div");
+        hintRight.className = "swipe-hint right";
+        hintRight.textContent = rightLabel || "Right";
+        card.appendChild(hintLeft);
+        card.appendChild(hintRight);
+
+        var startX = 0, currentX = 0, swiping = false;
+        card.addEventListener("pointerdown", function (e) {
+          swiping = true; startX = e.clientX; card.setPointerCapture(e.pointerId);
+        });
+        card.addEventListener("pointermove", function (e) {
+          if (!swiping) return;
+          currentX = e.clientX;
+          var dx = currentX - startX;
+          card.style.transform = "translateX(" + dx + "px) rotate(" + (dx * 0.04) + "deg)";
+          card.style.transition = "none";
+          if (dx < -40) hintLeft.classList.add("visible"); else hintLeft.classList.remove("visible");
+          if (dx > 40) hintRight.classList.add("visible"); else hintRight.classList.remove("visible");
+        });
+        card.addEventListener("pointerup", function () {
+          if (!swiping) return;
+          swiping = false;
+          var dx = currentX - startX;
+          card.style.transition = "transform 300ms ease-out, opacity 300ms ease-out";
+          hintLeft.classList.remove("visible");
+          hintRight.classList.remove("visible");
+
+          if (dx > 60) {
+            card.style.transform = "translateX(500px)"; card.style.opacity = "0";
+            if (isSlider && onRightComplete) onRightComplete(Math.abs(dx));
+            setTimeout(function () { if (onRight) onRight(); }, 300);
+          } else if (dx < -60) {
+            card.style.transform = "translateX(-500px)"; card.style.opacity = "0";
+            if (isSlider) {
+              if (onLeft) onLeft(Math.abs(dx));
+              setTimeout(function () { if (onRight) onRight(); }, 300);
+            } else {
+              setTimeout(function () { if (onLeft) onLeft(); }, 300);
+            }
+          } else {
+            card.style.transform = "translateX(0) rotate(0deg)";
+          }
+          currentX = startX;
+        });
+        card.addEventListener("pointercancel", function () {
+          swiping = false;
+          card.style.transition = "transform 300ms ease-out";
+          card.style.transform = "translateX(0) rotate(0deg)";
+        });
+        deck.appendChild(card);
+      }
+
+      function finishPostRung() {
+        if (postRungTimerId) { clearTimeout(postRungTimerId); postRungTimerId = null; }
+        postRungData.allStepsDone = postRungData.sudsAfter !== null;
+        saveSessionLog(postRungData);
+
+        postRungState = null;
+        state.activeRungId = null;
+        postRungData = null;
+        els.postRungPanel.style.display = "none";
+        els.ladderPanel.style.display = "block";
         saveState();
         render();
+      }
+
+      function saveSessionLog(data) {
+        var KEY = "fearladder_sessions";
+        var sessions = [];
+        try { sessions = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) {}
+        sessions.push({
+          date: new Date().toISOString(),
+          rungId: data.rungId,
+          sudsBefore: data.originalSuds,
+          sudsAfter: data.sudsAfter,
+          predictionResult: data.predictionResult,
+          learningChoice: data.learningChoice,
+          allStepsDone: data.allStepsDone
+        });
+        // Cap at 100 sessions
+        if (sessions.length > 100) sessions = sessions.slice(-100);
+        localStorage.setItem(KEY, JSON.stringify(sessions));
       }
       function cancelActiveRung() {
         state.activeRungId = null;
@@ -1475,6 +1802,9 @@
         swipeIndex = 0;
         showLoadingScreen = false;
         if (loadingTimerId) { clearTimeout(loadingTimerId); loadingTimerId = null; }
+        postRungState = null;
+        postRungData = null;
+        if (postRungTimerId) { clearTimeout(postRungTimerId); postRungTimerId = null; }
         syncSelector();
         ensureSituations();
         saveStreak({ count: 0, lastActiveDate: null });
