@@ -383,6 +383,118 @@
       margin-bottom: 0.25rem;
     }
 
+    /* ── Unlock gate ────────────────────────────────────────── */
+
+    .unlock-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      animation: fadeUp 400ms ease-out both;
+    }
+
+    .unlock-icon {
+      font-size: 3rem;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+
+    .unlock-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .unlock-subtitle {
+      font-size: 0.925rem;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 340px;
+    }
+
+    .unlock-preview {
+      background: var(--sage-wash);
+      border: 2px dashed var(--sage);
+      border-radius: var(--r);
+      padding: 1rem 1.25rem;
+      font-size: 0.875rem;
+      color: var(--sage-dark);
+      max-width: 340px;
+      line-height: 1.5;
+    }
+
+    .unlock-preview strong {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-size: 0.95rem;
+    }
+
+    .unlock-price {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--blue);
+    }
+
+    .unlock-price span {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .unlock-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.9rem 2rem;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 200ms ease;
+    }
+
+    .unlock-btn:hover { background: var(--blue-dark); }
+
+    .unlock-license-input {
+      width: 100%;
+      max-width: 300px;
+      padding: 0.7rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-size: 0.925rem;
+      text-align: center;
+      letter-spacing: 0.05em;
+      transition: border-color 200ms ease;
+    }
+
+    .unlock-license-input:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(74,127,193,0.15);
+    }
+
+    .unlock-license-input.error {
+      border-color: var(--coral);
+    }
+
+    .unlock-error {
+      font-size: 0.85rem;
+      color: var(--coral);
+      min-height: 1.2rem;
+    }
+
+    .unlock-divider {
+      width: 60px;
+      height: 1px;
+      background: var(--border);
+      margin: 0.25rem 0;
+    }
+
     /* Reveal banner */
     .reveal-banner {
       padding: 1.25rem;
@@ -788,6 +900,11 @@
         <div class="swipe-deck" id="swipeDeck"></div>
         <div class="swipe-counter" id="swipeCounter"></div>
       </section>
+      <section class="panel" id="unlockPanel" style="display:none">
+        <h2>Your Fear Ladder Is Ready</h2>
+        <p>You rated all 12 situations — your personalized exposure ladder has been built.</p>
+        <div id="unlockContent"></div>
+      </section>
       <section class="panel" id="ladderPanel" style="display:none">
         <h2>3. Climb Your Ladder</h2>
         <p id="ladderStatus">Rate all 12 situations to build your ladder.</p>
@@ -825,6 +942,8 @@
       "use strict";
       var STATE_KEY = "fearladder_state";
       var STREAK_KEY = "fearladder_streak";
+      var LICENSE_KEY = "fearladder_license";
+      var GUMROAD_PERMALINK = "fear-ladder"; // Replace with your Gumroad product permalink
       var TOTAL_RUNGS = 12;
       var TIMER_SECONDS = 60;
       var phobiaPresets = [
@@ -898,6 +1017,8 @@
         ratingFill: document.getElementById("swipeCounter"),
         swipePanel: document.getElementById("swipePanel"),
         ladderPanel: document.getElementById("ladderPanel"),
+        unlockPanel: document.getElementById("unlockPanel"),
+        unlockContent: document.getElementById("unlockContent"),
         postRungPanel: document.getElementById("postRungPanel"),
         postRungContent: document.getElementById("postRungContent"),
         ladderList: document.getElementById("ladderList"),
@@ -959,6 +1080,84 @@
       }
       function saveStreak(streak) {
         localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
+      }
+      function isUnlocked() {
+        try {
+          var saved = localStorage.getItem(LICENSE_KEY);
+          return saved === "verified";
+        } catch (e) {
+          return false;
+        }
+      }
+      function saveLicense() {
+        localStorage.setItem(LICENSE_KEY, "verified");
+      }
+      function verifyLicense(key, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://api.gumroad.com/v2/licenses/verify", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onload = function () {
+          if (xhr.status === 200) {
+            try {
+              var resp = JSON.parse(xhr.responseText);
+              if (resp.success) {
+                saveLicense();
+                callback(null, true);
+                return;
+              }
+            } catch (e) {}
+          }
+          callback("Invalid license key. Please check and try again.", false);
+        };
+        xhr.onerror = function () {
+          callback("Could not verify license. Check your internet connection.", false);
+        };
+        xhr.send("product_permalink=" + encodeURIComponent(GUMROAD_PERMALINK) + "&license_key=" + encodeURIComponent(key));
+      }
+      function renderUnlockScreen() {
+        els.swipePanel.style.display = "none";
+        els.ladderPanel.style.display = "none";
+        els.unlockPanel.style.display = "block";
+        els.unlockContent.innerHTML =
+          '<div class=\"unlock-screen\">' +
+          '<div class=\"unlock-icon\">🔓</div>' +
+          '<div class=\"unlock-title\">Your Fear Ladder Is Ready</div>' +
+          '<div class=\"unlock-subtitle\">You rated all 12 situations. Your personalized exposure ladder has been built — ranked from least to most terrifying, ready to climb one rung at a time.</div>' +
+          '<div class=\"unlock-preview\"><strong>What you\'ll unlock:</strong>12-rung exposure ladder · 60-second guided sessions · Progress tracking · Post-session reflection · Streak tracking</div>' +
+          '<div class=\"unlock-price\">$7<span> one-time</span></div>' +
+          '<a class=\"unlock-btn\" href=\"https://gumroad.com/l/' + GUMROAD_PERMALINK + '\" target=\"_blank\" rel=\"noopener\">🔗 Get License Key</a>' +
+          '<div class=\"unlock-subtitle\" style=\"font-size:0.8rem\">You\'ll receive a license key after purchase. Paste it below.</div>' +
+          '<div class=\"unlock-divider\"></div>' +
+          '<input class=\"unlock-license-input\" id=\"licenseInput\" type=\"text\" placeholder=\"Paste license key here\" autocomplete=\"off\">' +
+          '<div class=\"unlock-error\" id=\"licenseError\"></div>' +
+          '<button class=\"unlock-btn\" id=\"verifyBtn\" style=\"background:var(--sage);color:#fff\">✅ Verify &amp; Unlock</button>' +
+          '</div>';
+        document.getElementById("verifyBtn").addEventListener("click", function () {
+          var input = document.getElementById("licenseInput");
+          var err = document.getElementById("licenseError");
+          var key = input.value.trim();
+          if (!key) {
+            input.classList.add("error");
+            err.textContent = "Please enter your license key.";
+            return;
+          }
+          input.classList.remove("error");
+          err.textContent = "Verifying...";
+          verifyLicense(key, function (error, success) {
+            if (success) {
+              els.unlockPanel.style.display = "none";
+              els.ladderPanel.style.display = "block";
+              renderLadder();
+              window.scrollTo({ top: els.ladderPanel.offsetTop - 20, behavior: "smooth" });
+            } else {
+              input.classList.add("error");
+              err.textContent = error;
+            }
+          });
+        });
+        document.getElementById("licenseInput").addEventListener("keydown", function (e) {
+          if (e.key === "Enter") document.getElementById("verifyBtn").click();
+        });
       }
       function populatePhobias() {
         els.phobiaSelect.innerHTML = "";
@@ -1065,10 +1264,18 @@
           state.situations.every(function (s) { return s.suds !== null; });
         if (allRated) {
           els.swipePanel.style.display = "none";
-          els.ladderPanel.style.display = "block";
+          if (isUnlocked()) {
+            els.unlockPanel.style.display = "none";
+            els.ladderPanel.style.display = "block";
+          } else {
+            els.ladderPanel.style.display = "none";
+            renderUnlockScreen();
+            return;
+          }
         } else {
           els.swipePanel.style.display = "block";
           els.ladderPanel.style.display = "none";
+          els.unlockPanel.style.display = "none";
         }
         renderRatings();
         if (allRated) renderLadder();
@@ -1092,10 +1299,14 @@
             showLoadingScreen = true;
             loadingTimerId = setTimeout(function () {
               showLoadingScreen = false;
-              els.swipePanel.style.display = "none";
-              els.ladderPanel.style.display = "block";
-              renderLadder();
-              window.scrollTo({ top: els.ladderPanel.offsetTop - 20, behavior: "smooth" });
+              if (isUnlocked()) {
+                els.swipePanel.style.display = "none";
+                els.ladderPanel.style.display = "block";
+                renderLadder();
+                window.scrollTo({ top: els.ladderPanel.offsetTop - 20, behavior: "smooth" });
+              } else {
+                renderUnlockScreen();
+              }
             }, 2200);
             render();
           }
