@@ -943,7 +943,8 @@
       var STATE_KEY = "fearladder_state";
       var STREAK_KEY = "fearladder_streak";
       var LICENSE_KEY = "fearladder_license";
-      var GUMROAD_PERMALINK = "fear-ladder"; // Replace with your Gumroad product permalink
+      var GUMROAD_PRODUCT_ID = "YNGqVimOwzcg2sce8QrUQg==";
+      var GUMROAD_URL = "https://gumroad.com/l/fear-ladder";
       var TOTAL_RUNGS = 12;
       var TIMER_SECONDS = 60;
       var phobiaPresets = [
@@ -1112,7 +1113,7 @@
         xhr.onerror = function () {
           callback("Could not verify license. Check your internet connection.", false);
         };
-        xhr.send("product_permalink=" + encodeURIComponent(GUMROAD_PERMALINK) + "&license_key=" + encodeURIComponent(key));
+        xhr.send("product_id=" + encodeURIComponent(GUMROAD_PRODUCT_ID) + "&license_key=" + encodeURIComponent(key));
       }
       function renderUnlockScreen() {
         els.swipePanel.style.display = "none";
@@ -1125,7 +1126,7 @@
           '<div class=\"unlock-subtitle\">You rated all 12 situations. Your personalized exposure ladder has been built — ranked from least to most terrifying, ready to climb one rung at a time.</div>' +
           '<div class=\"unlock-preview\"><strong>What you\'ll unlock:</strong>12-rung exposure ladder · 60-second guided sessions · Progress tracking · Post-session reflection · Streak tracking</div>' +
           '<div class=\"unlock-price\">$7<span> one-time</span></div>' +
-          '<a class=\"unlock-btn\" href=\"https://gumroad.com/l/' + GUMROAD_PERMALINK + '\" target=\"_blank\" rel=\"noopener\">🔗 Get License Key</a>' +
+          '<a class=\"unlock-btn\" href=\"' + GUMROAD_URL + '\" target=\"_blank\" rel=\"noopener\">🔗 Get License Key</a>' +
           '<div class=\"unlock-subtitle\" style=\"font-size:0.8rem\">You\'ll receive a license key after purchase. Paste it below.</div>' +
           '<div class=\"unlock-divider\"></div>' +
           '<input class=\"unlock-license-input\" id=\"licenseInput\" type=\"text\" placeholder=\"Paste license key here\" autocomplete=\"off\">' +
