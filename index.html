@@ -945,8 +945,6 @@
       var LICENSE_KEY = "fearladder_license";
       var GUMROAD_PRODUCT_ID = "YNGqVimOwzcg2sce8QrUQg==";
       var GUMROAD_URL = "https://gumroad.com/l/fear-ladder-app";
-      // SHA-256 hash of the unlock code. Set the actual code on Gumroad's purchase content page.
-      var UNLOCK_HASH = "f7c3bc1d808e04732adf679965ccc34ca7ae3441";
       var TOTAL_RUNGS = 12;
       var TIMER_SECONDS = 60;
       var phobiaPresets = [
@@ -1095,25 +1093,29 @@
       function saveLicense() {
         localStorage.setItem(LICENSE_KEY, "verified");
       }
-      function verifyCode(code, callback) {
-        // Simple SHA-256 hash check — no API call, no CORS, no internet needed
-        sha256(code.trim()).then(function (hash) {
-          if (hash === UNLOCK_HASH) {
-            saveLicense();
-            callback(null, true);
-            return;
+      function verifyLicense(key, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://api.gumroad.com/v2/licenses/verify", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onload = function () {
+          if (xhr.status === 200) {
+            try {
+              var resp = JSON.parse(xhr.responseText);
+              if (resp.success) {
+                saveLicense();
+                callback(null, true);
+                return;
+              }
+              callback(resp.message || "Invalid license key.", false);
+              return;
+            } catch (e) {}
           }
-          callback("Invalid unlock code. Check your purchase email for the correct code.", false);
-        });
-      }
-      function sha256(str) {
-        // SubtleCrypto SHA-256 (works in all modern browsers)
-        var encoder = new TextEncoder();
-        return crypto.subtle.digest("SHA-256", encoder.encode(str)).then(function (buffer) {
-          return Array.from(new Uint8Array(buffer)).map(function (b) {
-            return b.toString(16).padStart(2, "0");
-          }).join("");
-        });
+          callback("Could not verify license. Try again.", false);
+        };
+        xhr.onerror = function () {
+          callback("Could not reach Gumroad. Check your internet connection.", false);
+        };
+        xhr.send("product_id=" + encodeURIComponent(GUMROAD_PRODUCT_ID) + "&license_key=" + encodeURIComponent(key));
       }
       function renderUnlockScreen() {
         els.swipePanel.style.display = "none";
@@ -1126,25 +1128,25 @@
           '<div class=\"unlock-subtitle\">You rated all 12 situations. Your personalized exposure ladder has been built — ranked from least to most terrifying, ready to climb one rung at a time.</div>' +
           '<div class=\"unlock-preview\"><strong>What you\'ll unlock:</strong>12-rung exposure ladder · 60-second guided sessions · Progress tracking · Post-session reflection · Streak tracking</div>' +
           '<div class=\"unlock-price\">$7<span> one-time</span></div>' +
-          '<a class=\"unlock-btn\" href=\"' + GUMROAD_URL + '\" target=\"_blank\" rel=\"noopener\">🔗 Get Unlock Code</a>' +
-          '<div class=\"unlock-subtitle\" style=\"font-size:0.8rem\">You\'ll receive an unlock code after purchase. Paste it below.</div>' +
+          '<a class=\"unlock-btn\" href=\"' + GUMROAD_URL + '\" target=\"_blank\" rel=\"noopener\">🔗 Get License Key</a>' +
+          '<div class=\"unlock-subtitle\" style=\"font-size:0.8rem\">Buy on Gumroad, then paste your license key below.</div>' +
           '<div class=\"unlock-divider\"></div>' +
-          '<input class=\"unlock-license-input\" id=\"licenseInput\" type=\"text\" placeholder=\"Paste unlock code here\" autocomplete=\"off\">' +
+          '<input class=\"unlock-license-input\" id=\"licenseInput\" type=\"text\" placeholder=\"Paste license key here\" autocomplete=\"off\">' +
           '<div class=\"unlock-error\" id=\"licenseError\"></div>' +
           '<button class=\"unlock-btn\" id=\"verifyBtn\" style=\"background:var(--sage);color:#fff\">✅ Verify &amp; Unlock</button>' +
           '</div>';
         document.getElementById("verifyBtn").addEventListener("click", function () {
           var input = document.getElementById("licenseInput");
           var err = document.getElementById("licenseError");
-          var code = input.value.trim();
-          if (!code) {
+          var key = input.value.trim();
+          if (!key) {
             input.classList.add("error");
-            err.textContent = "Please enter your unlock code.";
+            err.textContent = "Please enter your license key.";
             return;
           }
           input.classList.remove("error");
           err.textContent = "Verifying...";
-          verifyCode(code, function (error, success) {
+          verifyLicense(key, function (error, success) {
             if (success) {
               els.unlockPanel.style.display = "none";
               els.ladderPanel.style.display = "block";
