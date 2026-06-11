@@ -6,7 +6,7 @@
   <title>Help Ladder</title>
   <style>
     /* ================================================================
-       FEAR LADDER — Clinical calm UI
+       HELP LADDER — Clinical calm UI
        Palette: soft blue #E8F0FE / #B3D4FF  ·  warm neutral #F5F0EB
                 sage green #7EB8A2  ·  soft coral #E8927C
        ================================================================ */
@@ -953,6 +953,9 @@
       var LICENSE_KEY = "help_ladder_license";
       var GUMROAD_PRODUCT_ID = "YNGqVimOwzcg2sce8QrUQg==";
       var GUMROAD_URL = "https://coretechlabs.gumroad.com/l/help-ladder-app";
+      var STRIPE_SOLO = "https://buy.stripe.com/7sY5kF1Nbg3UdKn6ut5ZC00";
+      var STRIPE_GROUP = "https://buy.stripe.com/3cI8wR3VjeZQdKn0655ZC01";
+      var STRIPE_CLINIC = "https://buy.stripe.com/4gMfZj9fD04W8q39GF5ZC02";
       var TOTAL_RUNGS = 12;
       var TIMER_SECONDS = 60;
       var phobiaPresets = [
@@ -1130,18 +1133,36 @@
         els.ladderPanel.style.display = "none";
         els.unlockPanel.style.display = "block";
         els.unlockContent.innerHTML =
-          '<div class=\"unlock-screen\">' +
-          '<div class=\"unlock-icon\">🔓</div>' +
-          '<div class=\"unlock-title\">Your Help Ladder Is Ready</div>' +
-          '<div class=\"unlock-subtitle\">You rated all 12 situations. Your personalized exposure ladder has been built — ranked from least to most terrifying, ready to climb one rung at a time.</div>' +
-          '<div class=\"unlock-preview\"><strong>What you\'ll unlock:</strong>12-rung exposure ladder · 60-second guided sessions · Progress tracking · Post-session reflection · Streak tracking</div>' +
-          '<div class=\"unlock-price\">$7<span> one-time</span></div>' +
-          '<a class=\"unlock-btn\" href=\"' + GUMROAD_URL + '\" target=\"_blank\" rel=\"noopener\">🔗 Get License Key</a>' +
-          '<div class=\"unlock-subtitle\" style=\"font-size:0.8rem\">Buy on Gumroad, then paste your license key below.</div>' +
-          '<div class=\"unlock-divider\"></div>' +
-          '<input class=\"unlock-license-input\" id=\"licenseInput\" type=\"text\" placeholder=\"Paste license key here\" autocomplete=\"off\">' +
-          '<div class=\"unlock-error\" id=\"licenseError\"></div>' +
-          '<button class=\"unlock-btn\" id=\"verifyBtn\" style=\"background:var(--sage);color:#fff\">✅ Verify &amp; Unlock</button>' +
+          '<div class="unlock-screen">' +
+          '<div class="unlock-icon">🔓</div>' +
+          '<div class="unlock-title">Your Help Ladder Is Ready</div>' +
+          '<div class="unlock-subtitle">You rated all 12 situations. Your personalized exposure ladder has been built — ranked from least to most challenging, ready to climb one rung at a time.</div>' +
+          '<div class="unlock-preview"><strong>Pro features:</strong>12-rung exposure ladder · 60-second guided sessions · Progress tracking · Post-session reflection · Streak tracking</div>' +
+          '<div class="unlock-divider"></div>' +
+          '<div class="unlock-title" style="font-size:1rem">Choose Your Plan</div>' +
+          '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0">' +
+            '<a class="unlock-btn" href="' + STRIPE_SOLO + '" target="_blank" rel="noopener" style="flex:1;min-width:100px;background:var(--blue);color:#fff;text-align:center;display:block;text-decoration:none;padding:14px 8px">' +
+              '<div style="font-weight:700;font-size:1rem">Solo</div>' +
+              '<div style="font-size:0.75rem;opacity:0.85">$49<span style="font-size:0.65rem">/mo</span></div>' +
+              '<div style="font-size:0.65rem;opacity:0.7;margin-top:2px">Up to 15 patients</div>' +
+            '</a>' +
+            '<a class="unlock-btn" href="' + STRIPE_GROUP + '" target="_blank" rel="noopener" style="flex:1;min-width:100px;background:var(--sage);color:#fff;text-align:center;display:block;text-decoration:none;padding:14px 8px">' +
+              '<div style="font-weight:700;font-size:1rem">Group</div>' +
+              '<div style="font-size:0.75rem;opacity:0.85">$99<span style="font-size:0.65rem">/mo</span></div>' +
+              '<div style="font-size:0.65rem;opacity:0.7;margin-top:2px">16-50 patients</div>' +
+            '</a>' +
+            '<a class="unlock-btn" href="' + STRIPE_CLINIC + '" target="_blank" rel="noopener" style="flex:1;min-width:100px;background:var(--coral);color:#fff;text-align:center;display:block;text-decoration:none;padding:14px 8px">' +
+              '<div style="font-weight:700;font-size:1rem">Clinic</div>' +
+              '<div style="font-size:0.75rem;opacity:0.85">$199<span style="font-size:0.65rem">/mo</span></div>' +
+              '<div style="font-size:0.65rem;opacity:0.7;margin-top:2px">51+ patients</div>' +
+            '</a>' +
+          '</div>' +
+          '<div class="unlock-subtitle" style="font-size:0.7rem;margin-top:4px">Secure subscription via Stripe · Cancel anytime</div>' +
+          '<div class="unlock-divider"></div>' +
+          '<div class="unlock-subtitle" style="font-size:0.8rem">Already have a license key?</div>' +
+          '<input class="unlock-license-input" id="licenseInput" type="text" placeholder="Paste license key here" autocomplete="off">' +
+          '<div class="unlock-error" id="licenseError"></div>' +
+          '<button class="unlock-btn" id="verifyBtn" style="background:var(--muted);color:#fff">✅ Verify &amp; Unlock</button>' +
           '</div>';
         document.getElementById("verifyBtn").addEventListener("click", function () {
           var input = document.getElementById("licenseInput");
@@ -1470,7 +1491,7 @@
           '<div class="loading-spinner"></div>' +
           '<div class="loading-text">' +
           '<strong>Analyzing your responses...</strong>' +
-          'Building your personalized fear ladder' +
+          'Building your personalized help ladder' +
           '</div>' +
           '</div>';
         els.ratingText.textContent = TOTAL_RUNGS + "/" + TOTAL_RUNGS + " rated";
