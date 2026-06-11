@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fear Ladder</title>
+  <title>Help Ladder</title>
   <style>
     /* ================================================================
        FEAR LADDER — Clinical calm UI
@@ -870,7 +870,7 @@
   <main class="app">
     <header>
       <div>
-        <h1>Fear Ladder</h1>
+        <h1>Help Ladder</h1>
         <p>Build a rated exposure hierarchy and climb it one rung at a time.</p>
       </div>
       <div class="header-actions">
@@ -901,7 +901,7 @@
         <div class="swipe-counter" id="swipeCounter"></div>
       </section>
       <section class="panel" id="unlockPanel" style="display:none">
-        <h2>Your Fear Ladder Is Ready</h2>
+        <h2>Your Help Ladder Is Ready</h2>
         <p>You rated all 12 situations — your personalized exposure ladder has been built.</p>
         <div id="unlockContent"></div>
       </section>
@@ -921,7 +921,7 @@
 
   <!-- Persistent disclaimer footer — always visible -->
   <footer style="text-align:center; padding:16px 20px 24px; font-size:10px; color:var(--muted); line-height:1.6; max-width:500px; margin:0 auto;">
-    <strong>Fear Ladder is a self-help tool — not medical advice, diagnosis, or treatment.</strong><br>
+    <strong>Help Ladder is a self-help tool — not medical advice, diagnosis, or treatment.</strong><br>
     If you're in crisis, call or text <strong>988</strong> · Text <strong>HOME</strong> to <strong>741741</strong>.<br>
     <a href="terms.html" style="color:var(--accent); text-decoration:none; font-size:9px;">Full Terms & Disclaimer →</a>
   </footer>
@@ -1132,7 +1132,7 @@
         els.unlockContent.innerHTML =
           '<div class=\"unlock-screen\">' +
           '<div class=\"unlock-icon\">🔓</div>' +
-          '<div class=\"unlock-title\">Your Fear Ladder Is Ready</div>' +
+          '<div class=\"unlock-title\">Your Help Ladder Is Ready</div>' +
           '<div class=\"unlock-subtitle\">You rated all 12 situations. Your personalized exposure ladder has been built — ranked from least to most terrifying, ready to climb one rung at a time.</div>' +
           '<div class=\"unlock-preview\"><strong>What you\'ll unlock:</strong>12-rung exposure ladder · 60-second guided sessions · Progress tracking · Post-session reflection · Streak tracking</div>' +
           '<div class=\"unlock-price\">$7<span> one-time</span></div>' +
@@ -2013,7 +2013,7 @@
         }
       }
       function resetAllData() {
-        if (!window.confirm("Clear all Fear Ladder data from this browser?")) {
+        if (!window.confirm("Clear all Help Ladder data from this browser?")) {
           return;
         }
         clearTimer();
@@ -2057,14 +2057,14 @@
   </script>
 
   <!-- ═══════════════════════════════════════════════════════════════
-       LEGAL DISCLAIMER — Fear Ladder is a self-help tool, NOT medical care
+       LEGAL DISCLAIMER — Help Ladder is a self-help tool, NOT medical care
        ═══════════════════════════════════════════════════════════════ -->
   <div id="disclaimer-banner" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(44,51,64,0.85); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
     <div style="background:var(--panel); max-width:540px; width:92%; border-radius:var(--r); padding:32px 28px 24px; box-shadow:var(--shadow-md); text-align:center; font-family:system-ui,sans-serif; color:var(--text);">
       <div style="font-size:36px; margin-bottom:12px;">⚠️</div>
       <h2 style="margin:0 0 8px; font-size:20px; font-weight:700;">Important — Please Read</h2>
       <p style="font-size:13px; line-height:1.6; color:var(--muted); margin:0 0 8px;">
-        <strong>Fear Ladder is a self-guided exposure therapy tool.</strong> It is designed to help you gradually face fears at your own pace — but it is <strong>not</strong> a licensed therapist, counselor, or medical device.
+        <strong>Help Ladder is a self-guided exposure therapy tool.</strong> It is designed to help you gradually face fears at your own pace — but it is <strong>not</strong> a licensed therapist, counselor, or medical device.
       </p>
       <p style="font-size:12px; line-height:1.65; color:var(--muted); margin:0 0 12px;">
         It does <strong>not</strong> provide mental health diagnosis, treatment, or medical advice. Exposure therapy can temporarily increase anxiety — if you feel overwhelmed, stop and talk to a licensed professional. Your safety comes first.
@@ -2073,7 +2073,7 @@
         <strong>If you're in crisis:</strong> Call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) · Text <strong>HOME</strong> to <strong>741741</strong> (Crisis Text Line). Help is available 24/7.
       </p>
       <p style="font-size:10px; color:var(--muted); margin:0 0 16px; line-height:1.5;">
-        By continuing, you acknowledge that Fear Ladder is not a substitute for professional medical or psychological care, and that you assume all risks associated with its use.
+        By continuing, you acknowledge that Help Ladder is not a substitute for professional medical or psychological care, and that you assume all risks associated with its use.
       </p>
       <button onclick="acceptDisclaimer()" style="background:var(--sage); color:#fff; border:none; border-radius:var(--r-sm); padding:12px 40px; font-size:14px; font-weight:600; cursor:pointer; width:100%; transition:background var(--ease);"
         onmouseover="this.style.background='var(--sage-dark)'" onmouseout="this.style.background='var(--sage)'">
